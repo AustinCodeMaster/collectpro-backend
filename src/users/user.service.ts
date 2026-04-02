@@ -23,6 +23,11 @@ export const getUsers = async () => {
       tenantId: true,
       isActive: true,
       createdAt: true,
+      tenant: {
+        select: {
+          name: true,
+        }
+      }
     },
   });
 };

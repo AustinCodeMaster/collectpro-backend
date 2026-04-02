@@ -31,7 +31,16 @@ export const loginHandler = async (req: Request, res: Response): Promise<void> =
       tenantId: user.tenantId,
     });
 
-    res.status(200).json({ message: 'Login successful', token, role: user.role });
+    const userProfile = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      tenantId: user.tenantId,
+    };
+
+    res.status(200).json({ message: 'Login successful', token, user: userProfile });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error during login' });

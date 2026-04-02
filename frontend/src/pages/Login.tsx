@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/axiosConfig';
@@ -84,7 +84,7 @@ export default function Login() {
                 type="password"
                 required
                 className="w-full rounded-lg border border-gray-300 py-3 pr-4 pl-10 focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

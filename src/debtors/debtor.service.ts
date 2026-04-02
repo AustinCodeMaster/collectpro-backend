@@ -39,7 +39,11 @@ export class DebtorService {
       where: { id: debtorId, tenantId },
       include: {
         campaign: true,
-        debts: true,
+        debts: {
+          include: {
+            payments: true
+          }
+        },
       }
     });
   }

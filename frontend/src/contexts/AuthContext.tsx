@@ -1,20 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../api/axiosConfig';
+﻿import { createContext, useContext, useState, useEffect } from 'react';
 
-export enum Role {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  TENANT_ADMIN = 'TENANT_ADMIN',
-  MANAGER = 'MANAGER',
-  AGENT = 'AGENT',
-  FINANCE_OFFICER = 'FINANCE_OFFICER',
-}
+export const Role = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  TENANT_ADMIN: 'TENANT_ADMIN',
+  MANAGER: 'MANAGER',
+  AGENT: 'AGENT',
+  FINANCE_OFFICER: 'FINANCE_OFFICER',
+} as const;
+
+export type RoleType = typeof Role[keyof typeof Role];
 
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: Role;
+  role: RoleType;
   tenantId?: string;
 }
 

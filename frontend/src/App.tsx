@@ -1,35 +1,16 @@
-﻿import React from 'react';
+﻿
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
-
-function DashboardRouter() {
-  const { user, logout } = useAuth();
-  if (!user) return <Navigate to='/login' />;
-
-  return (
-    <div className='min-h-screen bg-gray-100 p-8 flex flex-col items-center justify-center'>
-      <div className='bg-white p-8 rounded-lg shadow-md max-w-lg w-full text-center'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-2'>Welcome, {user.firstName || user.email}!</h1>
-        <p className='text-gray-600 mb-6 flex flex-col items-center'>
-          <span className='bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block'>
-            Role: {user.role}
-          </span>
-          {user.tenantId && <span className='text-sm mt-2 text-gray-500'>Tenant ID: {user.tenantId}</span>}
-        </p>
-        <p className='text-gray-500 mb-6 italic'>
-          This is where your {user.role.replace('_', ' ')} Dashboard will go.
-        </p>
-        <button 
-          onClick={logout}
-          className='bg-red-600 text-white px-4 py-2 rounded font-medium hover:bg-red-700 transition'
-        >
-          Sign Out
-        </button>
-      </div>
-    </div>
-  );
-}
+import DashboardLayout from './layouts/DashboardLayout';
+import DashboardHome from './pages/DashboardHome';
+import Tenants from './pages/Tenants';
+import Users from './pages/Users';
+import Debtors from './pages/Debtors';
+import DebtorProfile from './pages/DebtorProfile';
+import Campaigns from './pages/Campaigns';
+import Payments from './pages/Payments';
+import Agents from './pages/Agents';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -44,7 +25,16 @@ function AppContent() {
   return (
     <Routes>
       <Route path='/login' element={isAuthenticated ? <Navigate to='/' replace /> : <Login />} />
-      <Route path='/' element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
+      <Route path='/' element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+        <Route index element={<DashboardHome />} />
+        <Route path='tenants' element={<Tenants />} />
+        <Route path='campaigns' element={<Campaigns />} />
+        <Route path='payments' element={<Payments />} />
+        <Route path='agents' element={<Agents />} />
+        <Route path='users' element={<Users />} />
+        <Route path='debtors' element={<Debtors />} />
+        <Route path='debtors/:id' element={<DebtorProfile />} />
+      </Route>
     </Routes>
   );
 }
