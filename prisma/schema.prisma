@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,9 +18,16 @@ model Tenant {
   id        String   @id @default(uuid())
   name      String
   isActive  Boolean  @default(true)
-  
+
   users     User[]
-  
+  agents    Agent[]
+  campaigns Campaign[]
+  debtors   Debtor[]
+  debts     Debt[]
+  payments  Payment[]
+  ledgers   Ledger[]
+  auditLogs AuditLog[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -34,17 +36,208 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  
+
   firstName String
   lastName  String
-  
+
   role      Role
   isActive  Boolean  @default(true)
-  
-  // Super Admins don't strictly belong to a tenant, everyone else does
+
   tenantId  String?
   tenant    Tenant?  @relation(fields: [tenantId], references: [id])
-  
+
+  agent     Agent?
+
+  paymentsHandled Payment[] @relation("FinanceOfficerPayments")
+  ledgerEntries   Ledger[]
+  auditLogs       AuditLog[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum AgentStatus {
+  AVAILABLE
+  BUSY
+  LUNCH
+  BREAK
+  OFFLINE
+}
+
+model Agent {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  extension String?
+  status    AgentStatus @default(OFFLINE)
+
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+
+  userId    String?   @unique
+  user      User?     @relation(fields: [userId], references: [id])
+
+  campaigns CampaignAgent[]
+  payments  Payment[] @relation("AgentPayments")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum CampaignStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  name        String
+  type        String
+  status      CampaignStatus @default(ACTIVE)
+
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+
+  agents      CampaignAgent[]
+  debtors     Debtor[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model CampaignAgent {
+  agentId     String
+  campaignId  String
+  
+  agent       Agent     @relation(fields: [agentId], references: [id])
+  campaign    Campaign  @relation(fields: [campaignId], references: [id])
+
+  @@id([agentId, campaignId])
+}
+
+enum DebtorStatus {
+  ACTIVE
+  CONTACTED
+  PROMISE_TO_PAY
+  UNREACHABLE
+  CLOSED
+}
+
+model Debtor {
+  id          String    @id @default(uuid())
+  name        String
+  phones      String[]
+  email       String?
+  address     String?
+  customFields Json?    
+  status      DebtorStatus @default(ACTIVE)
+
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+
+  debts       Debt[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum DebtStatus {
+  ACTIVE
+  PAID
+  SETTLED
+  WRITTEN_OFF
+}
+
+enum InterestType {
+  SIMPLE
+  COMPOUND
+  NONE
+}
+
+model Debt {
+  id              String      @id @default(uuid())
+  originalAmount  Decimal
+  currentBalance  Decimal
+  interestRate    Decimal     @default(0)
+  interestType    InterestType @default(NONE)
+  dueDate         DateTime
+
+  status          DebtStatus  @default(ACTIVE)
+
+  debtorId        String
+  debtor          Debtor      @relation(fields: [debtorId], references: [id])
+
+  tenantId        String
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+
+  payments        Payment[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Payment {
+  id                String    @id @default(uuid())
+  amount            Decimal
+  paymentDate       DateTime  @default(now())
+  notes             String?
+
+  debtId            String
+  debt              Debt      @relation(fields: [debtId], references: [id])
+
+  financeOfficerId  String
+  financeOfficer    User      @relation("FinanceOfficerPayments", fields: [financeOfficerId], references: [id])
+
+  agentId           String?
+  agent             Agent?    @relation("AgentPayments", fields: [agentId], references: [id])
+
+  tenantId          String
+  tenant            Tenant    @relation(fields: [tenantId], references: [id])
+
+  ledgerEntry       Ledger?
+
+  createdAt         DateTime  @default(now())
+}
+
+enum LedgerType {
+  DEBIT
+  CREDIT
+}
+
+model Ledger {
+  id          String     @id @default(uuid())
+  type        LedgerType
+  amount      Decimal
+  description String
+
+  paymentId   String?    @unique
+  payment     Payment?   @relation(fields: [paymentId], references: [id])
+
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+
+  createdAt   DateTime   @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   
+  entityType  String   
+  entityId    String
+  details     Json?    
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  createdAt   DateTime @default(now())
 }
